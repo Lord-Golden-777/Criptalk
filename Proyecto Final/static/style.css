@@ -1,0 +1,380 @@
+/* style.css - Chat app (AJUSTADO: tamaño de burbujas e imágenes, fondo más claro) */
+
+/* -------------------- Variables globales -------------------- */
+:root {
+  /* Sidebar */
+  --sidebar-width: 250px;
+  --sidebar-min: 180px;
+  --sidebar-max: 480px;
+
+  /* Barra de entrada de mensajes */
+  --chat-input-height: 56px;
+
+  /* Colores generales */
+  --app-border: #dcdcdc;
+  --sidebar-bg: #f5f5f5;
+  --header-bg: #3b82f6;
+  --accent: #128c7e;
+  --bubble-me: #3b82f6;      /* color burbuja mensajes propios */
+  --bubble-other: #ffffff;    /* color burbuja mensajes ajenos */
+  --bg-chat: #fafafa;         /* fondo general del chat */
+
+  /* Tipografía y tamaños */
+  --msg-time-color: #666666;
+  --avatar-bg: #7b8aa3;
+  --font-family: "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+
+  /* Anchos máximos de elementos */
+  --msg-max-width: 360px;     /* ancho máximo de burbujas de texto */
+  --img-max-width: 320px;     /* ancho máximo de imágenes en el chat */
+}
+
+/* -------------------- Reset & layout base -------------------- */
+html, body {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  background: var(--bg-chat);
+  font-family: var(--font-family);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  box-sizing: border-box;
+}
+
+/* Contenedor principal de la app */
+.app-shell {
+  display: flex;
+  height: 100vh;
+  border: 1px solid var(--app-border);
+  border-radius: 8px;
+  overflow: hidden;
+  min-height: 0;
+  background: transparent;
+}
+
+/* -------------------- Sidebar (Contactos y grupos) -------------------- */
+.sidebar {
+  width: var(--sidebar-width);
+  min-width: var(--sidebar-min);
+  max-width: var(--sidebar-max);
+  background: var(--sidebar-bg);
+  display: flex;
+  flex-direction: column;
+  border-right: 1px solid #e6eaef;
+  min-height: 0;
+  box-sizing: border-box;
+}
+
+/* Header del sidebar */
+.sidebar-header {
+  padding: 10px;
+  background: var(--header-bg);
+  color: white;
+  border-bottom: 1px solid rgba(0,0,0,0.06);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+}
+.sidebar-header .app-title { font-weight: 700; font-size: 16px; }
+.me-id { font-size: 12px; opacity: 0.95; }
+
+/* Listas de grupos y contactos */
+.groups-list,
+.contacts-list {
+  padding: 8px;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
+  min-height: 0;
+}
+
+/* Formulario para agregar contactos */
+.add-contact {
+  display: flex;
+  padding: 8px;
+  gap: 6px;
+  align-items: center;
+  border-top: 1px solid rgba(0,0,0,0.03);
+  border-bottom: 1px solid rgba(0,0,0,0.03);
+}
+.add-contact input[type="text"],
+.add-contact input[type="search"],
+.add-contact input[type="tel"],
+.add-contact input[type="email"] {
+  flex: 1;
+  padding: 8px;
+  border-radius: 6px;
+  border: 1px solid #d0d7dd;
+  font-size: 13px;
+  box-sizing: border-box;
+}
+.add-contact button {
+  padding: 8px 10px;
+  border-radius: 6px;
+  border: none;
+  background: #2b8fed;
+  color: white;
+  cursor: pointer;
+  font-size: 13px;
+}
+
+/* Item de contacto */
+.contact-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px;
+  border-radius: 8px;
+  text-decoration: none;
+  color: inherit;
+  transition: background 0.12s;
+}
+.contact-item:hover { background: rgba(0,0,0,0.03); }
+.contact-item.active { background: rgba(43, 140, 237, 0.12); }
+
+/* Avatar */
+.avatar {
+  width: 36px;
+  height: 36px;
+  background: var(--avatar-bg);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  color: white;
+  flex-shrink: 0;
+  font-size: 14px;
+}
+
+/* Datos del contacto */
+.contact-meta { display: flex; flex-direction: column; }
+.contact-name { font-weight: 600; font-size: 14px; }
+.contact-code { font-size: 12px; color: #6b7280; }
+
+/* Botón eliminar contacto dentro de lista */
+.contacts-list form button {
+  padding: 6px 8px;
+  border-radius: 6px;
+  border: none;
+  background: #ff4d4f;
+  color: white;
+  cursor: pointer;
+  font-size: 12px;
+}
+
+/* Divider para redimensionar sidebar */
+.divider {
+  width: 6px;
+  flex: 0 0 6px;
+  cursor: col-resize;
+  background: transparent;
+  transition: background 0.12s;
+}
+.divider:hover { background: rgba(0,0,0,0.06); }
+
+/* -------------------- Chat pane -------------------- */
+.chat-pane {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  background: transparent;
+  min-height: 0;
+}
+
+/* Header del chat */
+.chat-header {
+  padding: 10px;
+  border-bottom: 1px solid rgba(0,0,0,0.06);
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: rgba(59,130,246,0.04);
+}
+.peer-name { font-weight: 700; }
+.peer-code { font-size: 12px; color: #555; }
+
+/* -------------------- Área de mensajes -------------------- */
+.chat-messages {
+  flex: 1;
+  padding: 12px;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  background: #ffffff; /* fondo más claro */
+  min-height: 0;
+}
+
+/* Mensaje individual */
+.message {
+  margin-bottom: 12px;
+  display: flex;
+  align-items: flex-end;
+}
+.message.user { justify-content: flex-end; }
+
+/* Burbuja de mensaje de otros usuarios */
+.message.other .msg-bubble {
+  background: #000000;      /* gris muy claro */
+  color: #ffffff;           /* texto contrastante */
+  border: 1px solid #e6eef5;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.03);
+}
+
+/* Burbuja genérica (texto) */
+.msg-bubble {
+  max-width: var(--msg-max-width);
+  padding: 8px 10px;
+  border-radius: 16px;
+  background: var(--bubble-other);
+  position: relative;
+  box-shadow: 0 1px 0 rgba(0,0,0,0.04);
+  font-size: 14px;
+  line-height: 1.3;
+  word-wrap: break-word;
+}
+
+/* Mis mensajes */
+.message.user .msg-bubble {
+  background: #dcdbdb;
+  color: rgb(0, 0, 0);
+}
+
+/* Burbuja de imagen */
+.msg-bubble.img-bubble {
+  background: transparent !important;
+  padding: 6px;
+  border-radius: 12px;
+  display: inline-block;
+  max-width: calc(var(--img-max-width) + 16px);
+}
+
+/* Imagen dentro de chat */
+.chat-img {
+  display: block;
+  max-width: var(--img-max-width);
+  width: 100%;
+  height: auto;
+  border-radius: 10px;
+  box-shadow: 0 8px 20px rgba(3, 10, 24, 0.08);
+  margin: 0;
+}
+
+/* Hora del mensaje */
+.time {
+  display: block;
+  font-size: 11px;
+  color: var(--msg-time-color);
+  margin-top: 6px;
+  text-align: right;
+}
+
+/* Texto dentro de burbuja */
+.msg-bubble .msg-text {
+  padding: 6px 8px;
+  font-size: 14px;
+  line-height: 1.3;
+}
+
+/* -------------------- Chat input (barra inferior) -------------------- */
+.chat-input {
+  flex: 0 0 auto;
+  display: flex;
+  gap: 8px;
+  padding: 8px 12px;
+  align-items: center;
+  border-top: 1px solid rgba(0,0,0,0.06);
+  background: #ffffff;
+  box-sizing: border-box;
+  height: var(--chat-input-height);
+}
+
+.chat-input input[type="text"] {
+  flex: 1 1 auto;
+  min-width: 0;
+  height: calc(var(--chat-input-height) - 16px);
+  padding: 10px 12px;
+  border-radius: 24px;
+  border: 1px solid #d1d5db;
+  font-size: 14px;
+  box-sizing: border-box;
+  outline: none;
+}
+
+.chat-input input[type="file"] {
+  flex: 0 0 auto;
+  height: calc(var(--chat-input-height) - 20px);
+  font-size: 13px;
+}
+
+.chat-input button {
+  flex: 0 0 auto;
+  height: calc(var(--chat-input-height) - 18px);
+  padding: 8px 14px;
+  border-radius: 18px;
+  border: none;
+  background: var(--accent);
+  color: white;
+  cursor: pointer;
+  font-weight: 600;
+}
+
+/* -------------------- Drag & Drop highlight -------------------- */
+.dnd-highlight {
+  outline: 3px dashed rgba(0,0,0,0.12);
+  background: rgba(255,255,255,0.01);
+}
+
+/* -------------------- Utilities -------------------- */
+.hidden { display: none !important; }
+.text-muted { color: #6b7280; }
+.btn-ghost {
+  background: transparent;
+  border: 1px solid rgba(0,0,0,0.04);
+  padding: 6px 10px;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+/* Focus states para accesibilidad */
+.contact-item:focus,
+.contact-item a:focus,
+button:focus,
+input:focus {
+  outline: 3px solid rgba(43,140,237,0.14);
+  outline-offset: 2px;
+  border-radius: 6px;
+}
+
+/* -------------------- Responsive -------------------- */
+@media (max-width: 900px) {
+  :root {
+    --sidebar-width: 200px;
+    --sidebar-min: 140px;
+    --sidebar-max: 360px;
+    --chat-input-height: 56px;
+  }
+  .msg-bubble { max-width: 85%; }
+  .chat-img { max-width: 70vw; }
+}
+
+/* fixes layout para evitar overflow */
+.sidebar, .chat-pane, .chat-messages, .contacts-list, .groups-list { min-height: 0; }
+.app-shell { border-radius: 6px; }
+
+/* -------------------- Search Bar (Ocultada) -------------------- */
+.chat-header > div:nth-child(2) { display: none !important; }
+.search-bar { display: none; }
+
+/* -------------------- Botón eliminar grupo -------------------- */
+.btn-delete-group {
+  background-color: #ff4d4f; /* rojo */
+  color: white;
+  border: none;
+  border-radius: 12px;
+  padding: 6px 12px;
+  cursor: pointer;
+  font-size: 13px;
+  transition: background 0.2s;
+}
+.btn-delete-group:hover { background-color: #d9363e; }

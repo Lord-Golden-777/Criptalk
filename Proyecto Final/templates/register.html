@@ -1,0 +1,285 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Registrarse</title>
+
+  <!-- Estilos incrustados exclusivos para register -->
+  <style>
+    /* Reset y base */
+    * { box-sizing: border-box; }
+    html, body { height: 100%; margin: 0; padding: 0; }
+    body {
+      font-family: Inter, "Segoe UI", Roboto, Arial, sans-serif;
+      background: linear-gradient(160deg,#0f172a 0%, #0b3b6f 45%, #1e429f 100%);
+      color: #0f172a;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      padding: 24px;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+    }
+
+    /* Card blanca del registro */
+    .register-card {
+      width: 420px;
+      max-width: 100%;
+      background: linear-gradient(180deg, rgba(255,255,255,0.98), #ffffff);
+      border-radius: 16px;
+      box-shadow: 0 20px 50px rgba(3,10,24,0.45);
+      padding: 26px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    /* Header: logo circular + título */
+    .reg-header {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      margin-bottom: 14px;
+    }
+    .logo-circle {
+      width: 56px;
+      height: 56px;
+      border-radius: 50%;
+      background: linear-gradient(135deg,#1e3c72,#2a5298);
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      box-shadow: 0 6px 18px rgba(42,82,152,0.18);
+      color: white;
+      font-weight: 700;
+      font-size: 20px;
+    }
+    .reg-title { margin: 0; font-size: 20px; color: #12263b; }
+    .reg-sub { margin: 0; font-size: 13px; color: #586b84; }
+
+    /* Formulario de registro */
+    form.register-form { margin-top: 8px; display: grid; gap: 12px; }
+
+    /* Input con iconos dentro del campo */
+    .field { position: relative; }
+    .field input {
+      width: 100%;
+      padding: 14px 44px 14px 14px;
+      border-radius: 12px;
+      border: 1px solid #e6eef8;
+      background: #fbfdff;
+      font-size: 14px;
+      outline: none;
+      transition: box-shadow .18s ease, border-color .12s ease, transform .06s ease;
+    }
+    .field input:focus {
+      border-color: #2a5298;
+      box-shadow: 0 8px 20px rgba(42,82,152,0.12);
+      transform: translateY(-1px);
+    }
+    .field .icon { position: absolute; right: 12px; top: 50%; transform: translateY(-50%); width: 22px; height: 22px; opacity: .85; }
+
+    /* Medidor de fuerza de contraseña */
+    .pw-meter { height: 8px; background: #f1f5f9; border-radius: 999px; overflow: hidden; }
+    .pw-meter > div { height: 100%; width: 0%; background: #ef4444; transition: width .25s ease, background .25s ease; }
+    .pw-note { font-size: 12px; color: #6b7280; margin-top: 6px; }
+
+    /* Botones principales y secundarios */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      padding: 12px 14px;
+      border-radius: 999px;
+      border: none;
+      background: linear-gradient(180deg,#1e40af,#1e3c72);
+      color: white;
+      font-weight: 600;
+      cursor: pointer;
+      box-shadow: 0 8px 20px rgba(30,60,178,0.18);
+      transition: transform .12s ease, box-shadow .12s ease;
+      font-size: 15px;
+    }
+    .btn:hover { transform: translateY(-3px); box-shadow: 0 14px 28px rgba(30,60,178,0.22); }
+    .btn.secondary { background: transparent; border: 1px solid #e6eef8; color: #12314c; box-shadow: none; }
+
+    /* Footer del registro */
+    .reg-footer { margin-top: 10px; text-align: center; font-size: 13px; color: #4b5563; }
+    .reg-footer a { color: #1e3c72; font-weight: 600; text-decoration: none; }
+
+    /* Flash messages */
+    .flash { padding: 10px 12px; border-radius: 10px; font-size: 13px; margin-bottom: 8px; }
+    .flash.error { background: #fff1f2; color: #7f1d1d; border: 1px solid #fecaca; }
+    .flash.success { background: #ecfdf5; color: #064e3b; border: 1px solid #bbf7d0; }
+
+    /* Responsive móvil */
+    @media (max-width: 480px) {
+      .register-card { padding: 18px; width: calc(100% - 32px); border-radius: 12px; }
+      .logo-circle { width: 48px; height: 48px; font-size: 18px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="register-card" role="region" aria-label="Registro">
+
+    <!-- Header: logo + título + subtítulo -->
+    <div class="reg-header">
+      <div class="logo-circle">C</div>
+      <div>
+        <h2 class="reg-title">Crear cuenta</h2>
+        <p class="reg-sub">Rápido y seguro — únete al chat</p>
+      </div>
+    </div>
+
+    <!-- Flash messages: errores o alertas -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        <div>
+          {% for category, msg in messages %}
+            <div class="flash {{ 'error' if category == 'danger' else 'success' }}">{{ msg }}</div>
+          {% endfor %}
+        </div>
+      {% endif %}
+    {% endwith %}
+
+    <!-- Formulario principal -->
+    <form class="register-form" method="POST" novalidate>
+      <!-- Usuario -->
+      <div class="field">
+        <input id="username" name="username" type="text" placeholder="Nombre de usuario" required autocomplete="username" value="{{ request.form.username or '' }}">
+        <svg class="icon" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 12c2.7 0 4.9-2.2 4.9-4.9S14.7 2.2 12 2.2 7.1 4.4 7.1 7.1 9.3 12 12 12zM4 20.2C4 16.7 8.7 14.9 12 14.9s8 1.8 8 5.3H4z" fill="#9aa9c7"/></svg>
+      </div>
+
+      <!-- Email -->
+      <div class="field">
+        <input id="email" name="email" type="email" placeholder="Correo electrónico" required autocomplete="email" value="{{ request.form.email or '' }}">
+        <svg class="icon" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M3 6.5v11c0 .8.7 1.5 1.5 1.5h15c.8 0 1.5-.7 1.5-1.5v-11C21 5.7 20.3 5 19.5 5h-15C3.7 5 3 5.7 3 6.5z" fill="#9aa9c7"/></svg>
+      </div>
+
+      <!-- Contraseña -->
+      <div class="field">
+        <input id="password" name="password" type="password" placeholder="Contraseña" required autocomplete="new-password" minlength="6">
+        <svg class="icon" id="togglePw" viewBox="0 0 24 24" fill="none" aria-hidden="true" title="Mostrar / ocultar contraseña">
+          <path d="M12 5c-7 0-9 7-9 7s2 7 9 7 9-7 9-7-2-7-9-7z" fill="#9aa9c7"/><circle cx="12" cy="12" r="3" fill="#9aa9c7"/></svg>
+      </div>
+
+      <!-- Repetir contraseña -->
+      <div class="field">
+        <input id="password2" name="password2" type="password" placeholder="Repetir contraseña" required autocomplete="new-password" minlength="6">
+        <svg class="icon" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 12c2.7 0 4.9-2.2 4.9-4.9S14.7 2.2 12 2.2 7.1 4.4 7.1 7.1 9.3 12 12 12z" fill="#9aa9c7"/></svg>
+      </div>
+
+      <!-- Medidor de fuerza -->
+      <div>
+        <div class="pw-meter" aria-hidden="true"><div id="pwBar"></div></div>
+        <div class="pw-note" id="pwNote">Usa al menos 6 caracteres; combina letras y números para mayor seguridad.</div>
+      </div>
+
+      <!-- Términos -->
+      <div style="display:flex;align-items:center;gap:8px;">
+        <input id="terms" name="terms" type="checkbox" style="width:16px;height:16px;" required>
+        <label for="terms" style="font-size:13px;color:#475569;">Acepto los <a href="#" style="color:#1e3c72;text-decoration:none;font-weight:600;">términos</a></label>
+      </div>
+
+      <!-- Botones enviar / volver -->
+      <div style="display:flex;gap:10px;justify-content:space-between;margin-top:8px;">
+        <button type="submit" class="btn">Crear cuenta</button>
+        <a href="{{ url_for('auth.login') }}" class="btn secondary" style="text-decoration:none;display:inline-flex;align-items:center;justify-content:center;">Volver</a>
+      </div>
+    </form>
+
+    <!-- Footer registro -->
+    <div class="reg-footer" style="margin-top:12px;">
+      ¿Ya tienes cuenta? <a href="{{ url_for('auth.login') }}">Inicia sesión</a>
+    </div>
+  </div>
+
+  <!-- JS: toggle de contraseña y medidor de fuerza -->
+  <script>
+    (function () {
+      const pw = document.getElementById('password');
+      const pw2 = document.getElementById('password2');
+      const pwBar = document.getElementById('pwBar');
+      const pwNote = document.getElementById('pwNote');
+      const toggle = document.getElementById('togglePw');
+      const form = document.querySelector('.register-form');
+
+      // Toggle mostrar/ocultar contraseña
+      toggle && toggle.addEventListener('click', function () {
+        const t = pw.getAttribute('type') === 'password' ? 'text' : 'password';
+        pw.setAttribute('type', t);
+        toggle.style.opacity = (t === 'text') ? 0.6 : 0.85;
+      });
+
+      // Fuerza de la contraseña
+      function scorePassword(s) {
+        let score = 0;
+        if (!s) return 0;
+        if (s.length >= 6) score += 1;
+        if (s.length >= 10) score += 1;
+        if (/[0-9]/.test(s)) score += 1;
+        if (/[A-Z]/.test(s)) score += 1;
+        if (/[^A-Za-z0-9]/.test(s)) score += 1;
+        return score; // 0..5
+      }
+
+      function updatePwMeter() {
+        const s = pw.value || '';
+        const sc = scorePassword(s);
+        const pct = Math.min(100, (sc / 5) * 100);
+        pwBar.style.width = pct + '%';
+
+        if (sc <= 1) {
+          pwBar.style.background = '#ef4444';
+          pwNote.textContent = 'Muy débil — añade letras y números.';
+        } else if (sc === 2) {
+          pwBar.style.background = '#f59e0b';
+          pwNote.textContent = 'Débil — añade más caracteres.';
+        } else if (sc === 3) {
+          pwBar.style.background = '#f97316';
+          pwNote.textContent = 'Aceptable — puede mejorar.';
+        } else if (sc === 4) {
+          pwBar.style.background = '#10b981';
+          pwNote.textContent = 'Fuerte — buena contraseña.';
+        } else {
+          pwBar.style.background = '#059669';
+          pwNote.textContent = 'Muy fuerte — excelente.';
+        }
+      }
+
+      // Validación live de repetición de contraseña
+      pw2 && pw2.addEventListener('input', function () {
+        if (pw.value && pw2.value && pw.value !== pw2.value) {
+          pw2.style.borderColor = '#ef4444';
+        } else {
+          pw2.style.borderColor = '';
+        }
+      });
+
+      // Validación antes de enviar
+      form && form.addEventListener('submit', function (e) {
+        if (pw.value !== pw2.value) {
+          e.preventDefault();
+          alert('Las contraseñas no coinciden.');
+          pw2.focus();
+          return false;
+        }
+        const terms = document.getElementById('terms');
+        if (terms && !terms.checked) {
+          e.preventDefault();
+          alert('Debes aceptar los términos.');
+          terms.focus();
+          return false;
+        }
+        return true;
+      });
+
+      // Inicializar medidor al cargar
+      updatePwMeter();
+      pw && pw.addEventListener('input', updatePwMeter);
+    }());
+  </script>
+</body>
+</html>

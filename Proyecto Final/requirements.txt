@@ -1,0 +1,39 @@
+# Core
+Flask>=2.3.0
+python-dotenv>=1.0.0
+
+# Autenticación y formularios
+Flask-Login>=0.6.3
+Flask-WTF>=1.0.1
+WTForms>=3.0.1
+
+# WebSockets / realtime
+Flask-SocketIO>=5.5.1
+eventlet>=0.33.0        # necesario para Flask-SocketIO en producción
+python-engineio>=4.4.0
+python-socketio>=5.9.0
+
+# Base de datos y ORM
+SQLAlchemy>=2.0.0
+psycopg2-binary>=2.9.6  # si usas PostgreSQL; si usas MySQL, instala mysqlclient
+
+# Serialización (opcional)
+Flask-Marshmallow>=0.15.0
+marshmallow>=3.19.0
+
+# Almacenamiento de archivos
+boto3>=1.26.0           # para AWS S3
+# ó si prefieres MinIO:
+# minio>=7.1.0
+
+# Carga y procesamiento de imágenes
+Pillow>=10.0.0
+
+# Cross-origin (si frontend separado)
+Flask-CORS>=4.0.0
+
+# JWT (si prefieres tokens sobre sesiones)
+Flask-JWT-Extended>=4.4.0
+
+# Utilidades de despliegue
+gunicorn>=20.1.0        # servidor WSGI para producción

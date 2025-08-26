@@ -1,0 +1,306 @@
+{% extends "base.html" %}
+
+{% block title %}Chat - {{ username }}{% endblock %}
+
+{% block content %}
+<div class="app-shell">
+  <!-- ==================== Sidebar ==================== -->
+  <aside class="sidebar">
+    <!-- Header del sidebar con título y tu código de usuario -->
+    <div class="sidebar-header">
+      <div>
+        <div class="app-title">Chat</div>
+        <div class="me-id">Tu código: <span class="code">{{ user_code }}</span></div>
+      </div>
+    </div>
+
+    <!-- Buscador de contactos -->
+    <div style="padding:8px;border-bottom:1px solid #eee;">
+      <input id="contact-search" type="search" placeholder="Buscar contactos..." 
+             style="width:100%;padding:8px;border-radius:8px;border:1px solid #ddd;">
+    </div>
+
+    <!-- Lista de grupos -->
+    <div class="groups-list" style="padding:8px;border-bottom:1px solid #eee;">
+      <div style="font-weight:600;margin-bottom:6px;">Grupos</div>
+      {% if groups %}
+        {% for grp in groups %}
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;">
+            <!-- Link al grupo, activa si es el seleccionado -->
+            <a class="contact-item {% if active_group and active_group.id == grp.id %}active{% endif %}"
+               href="{{ url_for('chat.open_group', group_id=grp.id) }}" style="flex:1;">
+              <div class="avatar">{{ grp.name[:1] | upper }}</div>
+              <div class="contact-meta">
+                <div class="contact-name">{{ grp.name }}</div>
+                <div class="contact-code">Grupo • ID: {{ grp.id }}</div>
+              </div>
+            </a>
+
+            <!-- Botón para eliminar o salir del grupo según seas dueño -->
+            {% if grp.owner_id == user_id %}
+              <form method="POST" action="{{ url_for('chat.delete_group', group_id=grp.id) }}" style="margin:0;">
+                <button type="submit" class="btn-delete-group" title="Eliminar grupo">Eliminar</button>
+              </form>
+            {% else %}
+              <form method="POST" action="{{ url_for('chat.leave_group', group_id=grp.id) }}" style="margin:0;">
+                <button type="submit" title="Salir del grupo">Salir</button>
+              </form>
+            {% endif %}
+          </div>
+        {% endfor %}
+      {% else %}
+        <div class="empty-contacts">No perteneces a ningún grupo.</div>
+      {% endif %}
+    </div>
+
+    <!-- Formulario para agregar contactos usando código de 5 caracteres -->
+    <form class="add-contact" method="POST" action="{{ url_for('contacts.add_contact') }}">
+      <input name="code" maxlength="5" placeholder="Código de 5 caracteres" required>
+      <button type="submit">Agregar</button>
+    </form>
+
+    <!-- Lista de contactos -->
+    <div id="contacts-list" class="contacts-list" style="padding:8px;">
+      {% if contacts %}
+        {% for contact in contacts %}
+          <div class="contact-row" data-username="{{ contact.username|lower }}" 
+               data-code="{{ contact.code|lower }}" style="display:flex;align-items:center;gap:8px;margin-bottom:6px;">
+            <!-- Link al chat con el contacto, activo si es el seleccionado -->
+            <a class="contact-item contact-link {% if active_contact and active_contact.id == contact.id %}active{% endif %}"
+               href="{{ url_for('chat.open_chat', contact_id=contact.id) }}" style="flex:1;">
+              <div class="avatar">{{ contact.username[:1] | upper }}</div>
+              <div class="contact-meta">
+                <div class="contact-name">{{ contact.username }}</div>
+                <div class="contact-code">Código: {{ contact.code }}</div>
+              </div>
+            </a>
+
+            <!-- Botón para eliminar contacto -->
+            <form method="POST" action="{{ url_for('chat.remove_contact', contact_id=contact.id) }}" style="margin:0;">
+              <button type="submit" title="Eliminar contacto">Eliminar</button>
+            </form>
+          </div>
+        {% endfor %}
+      {% else %}
+        <div class="empty-contacts">
+          Aún no tienes contactos. Pide su código y agrégalo arriba.
+        </div>
+      {% endif %}
+    </div>
+  </aside>
+
+  <!-- Divider draggable entre sidebar y chat -->
+  <div id="divider" class="divider" aria-hidden="true"></div>
+
+  <!-- ==================== Panel de chat ==================== -->
+  <main class="chat-pane">
+    <!-- Header del chat con información del contacto o grupo activo -->
+    <div class="chat-header" style="display:flex;align-items:center;justify-content:space-between;gap:12px;">
+      <div class="chat-peer">
+        {% if active_contact %}
+          <div class="avatar">{{ active_contact.username[:1] | upper }}</div>
+          <div>
+            <div class="peer-name">{{ active_contact.username }}</div>
+            <div class="peer-code">Código: {{ active_contact.code }}</div>
+          </div>
+        {% elif active_group %}
+          <div class="avatar">{{ active_group.name[:1] | upper }}</div>
+          <div>
+            <div class="peer-name">{{ active_group.name }}</div>
+            <div class="peer-code">Grupo • ID: {{ active_group.id }}</div>
+          </div>
+        {% else %}
+          <div>
+            <div class="peer-name">Selecciona un contacto</div>
+          </div>
+        {% endif %}
+      </div>
+
+      <!-- Buscador de mensajes dentro del chat -->
+      <div style="flex:0 0 360px; display:flex; gap:8px; align-items:center;">
+        <input id="message-search" type="search" placeholder="Buscar mensajes..." 
+               style="flex:1;padding:8px;border-radius:8px;border:1px solid #ddd;">
+        <div id="search-results" style="position:relative;"></div>
+      </div>
+    </div>
+
+    <!-- Área de mensajes -->
+    <div id="chat-messages" class="chat-messages" style="position:relative;">
+      {% for msg in messages %}
+        <div class="message {% if msg.sender_id == user_id %}user{% else %}other{% endif %}" 
+             data-message-id="{{ msg.id }}">
+          <div class="msg-bubble {% if msg.image_filename %}img-bubble{% endif %}">
+            {% if msg.image_filename %}
+              <img src="{{ url_for('static', filename='uploads/' ~ msg.image_filename) }}"
+                   alt="imagen"
+                   class="chat-img">
+            {% endif %}
+            {% if msg.content %}
+              <div class="msg-text">{{ msg.content }}</div>
+            {% endif %}
+            <span class="time">{{ msg.timestamp.strftime('%H:%M') }}</span>
+          </div>
+        </div>
+      {% endfor %}
+    </div>
+
+    <!-- Formulario para enviar mensajes o imágenes -->
+    <form id="chat-form" class="chat-input" autocomplete="off">
+      <input type="text" id="message-input" placeholder="Escribe un mensaje..." autocomplete="off">
+      <input type="file" id="image-input" accept="image/*">
+      <button type="submit">Enviar</button>
+    </form>
+  </main>
+</div>
+
+<!-- Contexto seguro para JS: IDs de contacto, grupo y usuario -->
+{% set _chat_context = {
+  "active_contact_id": (active_contact.id if active_contact else None),
+  "active_group_id": (active_group.id if active_group else None),
+  "me_id": (user_id if user_id is not none else None)
+} %}
+
+<!-- Cliente socket.io -->
+<script src="/socket.io/socket.io.js"></script>
+
+<script>
+  // Guardamos contexto en JS
+  window.CHAT_CONTEXT = JSON.parse('{{ (_chat_context or {}) | tojson | safe }}');
+</script>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  'use strict';
+
+  // Variables principales
+  const ctx = window.CHAT_CONTEXT || {};
+  const ME_ID = ctx.me_id;
+  const ACTIVE_CONTACT_ID = ctx.active_contact_id != null ? Number(ctx.active_contact_id) : null;
+  const ACTIVE_GROUP_ID = ctx.active_group_id != null ? Number(ctx.active_group_id) : null;
+
+  const form = document.getElementById('chat-form');
+  const input = document.getElementById('message-input');
+  const imageInput = document.getElementById('image-input');
+  const chatMessages = document.getElementById('chat-messages');
+
+  if (!form || !input || !chatMessages) return;
+
+  // ==================== Socket.IO ====================
+  if (!window.CHAT_SOCKET && typeof io !== 'undefined') {
+    window.CHAT_SOCKET = io();
+  }
+  const socket = window.CHAT_SOCKET;
+
+  if (socket) {
+    // Cuando el socket se conecta
+    socket.on('connect', function() {
+      console.info('Socket conectado');
+      if (ACTIVE_GROUP_ID) socket.emit('join_group', { group_id: ACTIVE_GROUP_ID });
+    });
+
+    // Recepción de mensajes individuales y de grupo
+    socket.on('receive_message', appendMessage);
+    socket.on('receive_group_message', function(data) {
+      if (ACTIVE_GROUP_ID && parseInt(data.group_id,10) !== ACTIVE_GROUP_ID) return;
+      appendMessage(data);
+    });
+  }
+
+  // Función para añadir mensaje al DOM
+  function appendMessage(data) {
+    if (!chatMessages) return;
+
+    const div = document.createElement('div');
+    div.className = 'message ' + (data.sender_id === ME_ID ? 'user' : 'other');
+    if (data.id) div.dataset.messageId = data.id;
+
+    const bubble = document.createElement('div');
+    bubble.className = 'msg-bubble';
+    if (data.image_url) bubble.classList.add('img-bubble');
+
+    if (data.image_url) {
+      const img = document.createElement('img');
+      img.className = 'chat-img';
+      img.src = data.image_url;
+      img.alt = 'imagen';
+      bubble.appendChild(img);
+    }
+    if (data.content) {
+      const txt = document.createElement('div');
+      txt.className = 'msg-text';
+      txt.textContent = data.content;
+      bubble.appendChild(txt);
+    }
+
+    const time = document.createElement('span');
+    time.className = 'time';
+    time.textContent = data.time || '';
+    bubble.appendChild(time);
+
+    div.appendChild(bubble);
+    chatMessages.appendChild(div);
+    chatMessages.scrollTop = chatMessages.scrollHeight;
+  }
+
+  // Enter envía mensaje, Shift+Enter no
+  input.addEventListener('keypress', function(e) {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      form.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }));
+    }
+  });
+
+  // Manejo de submit (texto o imagen)
+  form.addEventListener('submit', function(ev) {
+    ev.preventDefault();
+
+    const message = (input.value || '').trim();
+    const file = imageInput && imageInput.files && imageInput.files[0];
+
+    if (!message && !file) return;
+
+    // --- Subir imagen + texto vía fetch ---
+    if (file) {
+      const fd = new FormData();
+      fd.append('file', file);
+      fd.append('content', message || '');
+      if (ACTIVE_GROUP_ID) fd.append('group_id', ACTIVE_GROUP_ID);
+      else if (ACTIVE_CONTACT_ID) fd.append('contact_id', ACTIVE_CONTACT_ID);
+
+      const endpoint = ACTIVE_GROUP_ID ? '/upload_group_image' : '/upload_image';
+      fetch(endpoint, { method:'POST', body: fd, credentials:'same-origin' })
+        .then(r => r.json())
+        .then(json => {
+          if (json.error) alert('No se pudo subir la imagen: ' + json.error);
+          else {
+            imageInput.value = '';
+            input.value = '';
+          }
+        })
+        .catch(err => {
+          console.error('upload failed', err);
+          alert('Error subiendo imagen.');
+        });
+      return;
+    }
+
+    // --- Enviar solo texto vía Socket.IO ---
+    if (socket && socket.connected) {
+      if (ACTIVE_GROUP_ID) {
+        socket.emit('send_group_message', { content: message, group_id: ACTIVE_GROUP_ID });
+      } else if (ACTIVE_CONTACT_ID) {
+        socket.emit('send_message', { content: message, contact_id: ACTIVE_CONTACT_ID });
+      } else {
+        console.warn('No hay contacto o grupo activo');
+      }
+      input.value = '';
+    } else {
+      console.warn('Socket.IO no conectado, mensaje no enviado');
+    }
+  });
+
+  // Auto-scroll al cargar la página
+  chatMessages.scrollTop = chatMessages.scrollHeight;
+});
+</script>
+{% endblock %}

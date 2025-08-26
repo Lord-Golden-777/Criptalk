@@ -1,0 +1,38 @@
+<!-- Lista de contactos y solicitudes -->
+
+<h2>Mis contactos</h2>
+<ul>
+  {% for c in contacts %}
+    <!-- Cada contacto se muestra con su nombre de usuario y código -->
+    <li>{{ c.contact.username }} ({{ c.contact.code }})</li>
+  {% else %}
+    <!-- Mensaje si no hay contactos -->
+    <li>No tienes contactos aún.</li>
+  {% endfor %}
+</ul>
+
+<h2>Solicitudes recibidas</h2>
+<ul>
+  {% for s in solicitudes %}
+    <!-- Cada solicitud muestra el nombre del usuario que envió la solicitud -->
+    <li>{{ s.owner.username }}
+      <!-- Link para aceptar la solicitud -->
+      <a href="{{ url_for('contacts.accept_contact', contact_id=s.id) }}">Aceptar</a>
+    </li>
+  {% else %}
+    <!-- Mensaje si no hay solicitudes pendientes -->
+    <li>No tienes solicitudes pendientes.</li>
+  {% endfor %}
+</ul>
+
+<!-- Formulario para agregar un nuevo contacto por código -->
+<form method="POST">
+  <input type="text" 
+         name="code" 
+         placeholder="Código de contacto" 
+         required 
+         maxlength="5" 
+         minlength="5" 
+         style="text-transform: uppercase;">
+  <button type="submit">Agregar contacto</button>
+</form>

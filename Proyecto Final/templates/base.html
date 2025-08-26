@@ -1,0 +1,38 @@
+<!-- templates/base.html - plantilla base para todas las páginas del chat -->
+
+<!doctype html>
+<html lang="es">
+<head>
+  <!-- Metadatos básicos -->
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <!-- Título de la página; puede ser sobrescrito por bloques hijos -->
+  <title>{% block title %}Chat{% endblock %}</title>
+
+  <!-- CSS principal del proyecto -->
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+  <!-- Flash messages: se muestran avisos de éxito, error o información -->
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+      <div class="flash-container">
+        {% for category, msg in messages %}
+          <!-- Cada mensaje usa su clase según categoría (flash-success, flash-danger, etc.) -->
+          <div class="flash {{ category }}">{{ msg }}</div>
+        {% endfor %}
+      </div>
+    {% endif %}
+  {% endwith %}
+
+  <!-- Bloque principal de contenido que será reemplazado por las plantillas hijas -->
+  {% block content %}{% endblock %}
+
+  <!-- Socket.IO para chat en tiempo real -->
+  <script src="https://cdn.socket.io/4.6.1/socket.io.min.js" crossorigin="anonymous"></script>
+
+  <!-- JS del chat (manejo de mensajes, envío y recepción) -->
+  <script src="{{ url_for('static', filename='chat.js') }}"></script>
+</body>
+</html>
